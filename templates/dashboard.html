@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard — SentiAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* Blues */
+  --blue-900:#0a1628;
+  --blue-800:#0f2044;
+  --blue-700:#1a3a6e;
+  --blue-600:#1d4ed8;
+  --blue-500:#2563eb;
+  --blue-400:#3b82f6;
+  --blue-300:#93c5fd;
+  --blue-200:#bfdbfe;
+  --blue-100:#dbeafe;
+  --blue-50: #eff6ff;
+ 
+  /* Sentiment */
+  --pos:#16a34a;
+  --neg:#dc2626;
+  --neu:#d97706;
+  --pos-bg:rgba(22,163,74,.1);
+  --neg-bg:rgba(220,38,38,.1);
+  --neu-bg:rgba(217,119,6,.1);
+ 
+  /* Layout */
+  --dark:#f0f4ff;
+  --surface:#e8effd;
+  --card:#ffffff;
+  --card2:#f5f8ff;
+  --border:#c7d9f8;
+  --border2:#a5c0f0;
+  --text:#0a1628;
+  --muted:#4b6094;
+  --muted2:#6b80b4;
+}
+ 
+html,body{height:100%}
+body{
+  background:var(--dark);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  display:flex;flex-direction:column;overflow-x:hidden;
+}
+ 
+/* ── Topbar ── */
+.topbar{
+  background:linear-gradient(135deg,var(--blue-900) 0%,var(--blue-800) 60%,var(--blue-700) 100%);
+  border-bottom:1px solid rgba(255,255,255,.1);
+  padding:.9rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(10,22,40,.25);
+}
+.logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#7dd3fc,#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.user-chip{
+  display:flex;align-items:center;gap:.6rem;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:100px;padding:.4rem .9rem .4rem .5rem;
+  backdrop-filter:blur(10px);
+}
+.avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue-400),var(--blue-300));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.7rem;color:var(--blue-900);
+}
+.user-name{font-size:.85rem;font-weight:500;color:#fff}
+.topbar-btn{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:.45rem .9rem;
+  color:rgba(255,255,255,.7);font-size:.82rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.topbar-btn:hover{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.4)}
+.report-btn{
+  background:linear-gradient(135deg,var(--blue-400),var(--blue-300)) !important;
+  color:var(--blue-900) !important;
+  border:none !important;font-weight:700;display:none;
+  box-shadow:0 2px 10px rgba(59,130,246,.4);
+}
+.report-btn:hover{opacity:.85}
+ 
+/* ── Main layout ── */
+.main{flex:1;display:grid;grid-template-columns:320px 1fr;gap:0;min-height:0}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+ 
+/* ── Sidebar ── */
+.sidebar{
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:1.5rem;
+  display:flex;flex-direction:column;gap:1.5rem;overflow-y:auto;
+}
+ 
+.section-label{
+  font-size:.72rem;color:var(--blue-500);
+  letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:.75rem;font-weight:700;
+}
+ 
+/* ── Metric cards ── */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.metric{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:.9rem;text-align:center;
+  position:relative;overflow:hidden;
+  box-shadow:0 1px 4px rgba(30,64,175,.08);
+  transition:transform .2s,box-shadow .2s;
+}
+.metric:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(30,64,175,.14)}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric.pos::before{background:var(--pos)}
+.metric.neg::before{background:var(--neg)}
+.metric.neu::before{background:var(--neu)}
+.metric.tot::before{background:linear-gradient(90deg,var(--blue-600),var(--blue-400))}
+.metric-val{
+  font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;
+  display:block;line-height:1;
+}
+.metric-lbl{font-size:.72rem;color:var(--muted);margin-top:.3rem;display:block}
+.metric-pct{font-size:.72rem;font-weight:700;margin-top:.2rem;display:block}
+.pos .metric-val,.pos .metric-pct{color:var(--pos)}
+.neg .metric-val,.neg .metric-pct{color:var(--neg)}
+.neu .metric-val,.neu .metric-pct{color:var(--neu)}
+.tot .metric-val{
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-400));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+ 
+/* ── Textarea ── */
+.textarea{
+  width:100%;
+  background:var(--blue-50);
+  border:1.5px solid var(--border);
+  border-radius:10px;padding:.85rem;
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:.88rem;resize:vertical;outline:none;min-height:90px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.textarea:focus{
+  border-color:var(--blue-400);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+  background:#fff;
+}
+.textarea::placeholder{color:var(--muted)}
+ 
+/* ── Buttons ── */
+.btn-row{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
+.btn{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:8px;padding:.55rem 1.1rem;
+  font-size:.82rem;font-weight:500;cursor:pointer;
+  color:var(--muted);font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.btn:hover{background:var(--blue-50);border-color:var(--blue-400);color:var(--blue-600)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-grad{
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+  color:#fff;border:none;font-weight:700;
+  box-shadow:0 2px 8px rgba(37,99,235,.3);
+}
+.btn-grad:hover{opacity:.9;box-shadow:0 4px 14px rgba(37,99,235,.4)}
+ 
+/* ── Result badge ── */
+.result-area{margin-top:.75rem;min-height:0}
+.badge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.5rem 1rem;border-radius:8px;
+  font-weight:600;font-size:.88rem;border:1px solid transparent;
+}
+.badge-pos{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.badge-neg{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.badge-neu{background:#fef3c7;color:#92400e;border-color:#fde68a}
+.badge-reason{font-size:.78rem;color:var(--muted2);margin-top:.3rem;font-style:italic}
+.badge-conf{font-size:.78rem;color:var(--muted2);margin-top:.1rem}
+ 
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;margin-bottom:.75rem}
+.tab{
+  padding:.45rem 1rem;border:1.5px solid var(--border);
+  border-radius:7px;font-size:.8rem;cursor:pointer;
+  background:#fff;color:var(--muted);
+  transition:all .15s;font-family:'DM Sans',sans-serif;
+}
+.tab:hover{background:var(--blue-50);border-color:var(--blue-300);color:var(--blue-600)}
+.tab.active{
+  background:var(--blue-600);border-color:var(--blue-600);
+  color:#fff;font-weight:600;
+  box-shadow:0 2px 6px rgba(37,99,235,.3);
+}
+ 
+/* ── Upload zone ── */
+.upload-zone{
+  border:2px dashed var(--blue-300);
+  border-radius:10px;padding:1.5rem;
+  text-align:center;cursor:pointer;
+  color:var(--muted);font-size:.85rem;
+  background:var(--blue-50);transition:all .15s;
+}
+.upload-zone:hover{background:var(--blue-100);border-color:var(--blue-400)}
+.upload-icon{font-size:1.5rem;margin-bottom:.4rem}
+.upload-hint{font-size:.75rem;color:var(--blue-400);margin-top:.3rem}
+ 
+.status{font-size:.8rem;color:var(--blue-500);padding:.3rem 0}
+ 
+/* ── Insight box ── */
+.insight-box{
+  background:linear-gradient(135deg,var(--blue-50),#fff);
+  border:1.5px solid var(--blue-300);
+  border-left:4px solid var(--blue-500);
+  border-radius:10px;padding:1rem;
+  font-size:.83rem;color:var(--blue-800);
+  line-height:1.7;display:none;
+  box-shadow:0 2px 8px rgba(37,99,235,.08);
+}
+ 
+/* ── Content area ── */
+.content{background:var(--dark);overflow-y:auto;display:flex;flex-direction:column;gap:0}
+ 
+/* ── Viz section ── */
+.viz-section{
+  padding:1.5rem;border-bottom:1px solid var(--border);
+  background:#fff;
+}
+.viz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.viz-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--blue-900)}
+.viz-tabs{display:flex;gap:4px}
+ 
+.chart-wrap{position:relative;width:100%;height:260px}
+ 
+.legend{display:flex;flex-wrap:wrap;gap:1rem;margin-top:.75rem;font-size:.78rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:.4rem}
+.sq{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+ 
+/* ── Reviews list ── */
+.list-section{flex:1;padding:1.5rem;background:var(--dark)}
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;
+}
+.list-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--blue-900)}
+.muted{color:var(--muted);font-weight:400;font-size:.85rem}
+.filter-btns{display:flex;gap:4px;flex-wrap:wrap}
+.filter-btn{
+  padding:.35rem .85rem;border:1.5px solid var(--border);
+  border-radius:6px;font-size:.75rem;cursor:pointer;
+  background:#fff;color:var(--muted);
+  font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.filter-btn:hover{background:var(--blue-50);border-color:var(--blue-400);color:var(--blue-600)}
+.filter-btn.active{
+  background:var(--blue-600);border-color:var(--blue-600);
+  color:#fff;font-weight:600;
+}
+.filter-btn.danger{border-color:#fecaca;color:var(--neg)}
+.filter-btn.danger:hover{background:#fee2e2;border-color:#fca5a5}
+ 
+/* ── Review items ── */
+.reviews-list{display:flex;flex-direction:column;gap:.5rem}
+.review-item{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:10px;padding:.85rem 1rem;
+  display:flex;justify-content:space-between;
+  align-items:flex-start;gap:1rem;font-size:.85rem;
+  transition:border-color .2s,box-shadow .2s;
+}
+.review-item:hover{
+  border-color:var(--blue-400);
+  box-shadow:0 2px 10px rgba(37,99,235,.1);
+}
+.review-text{flex:1;line-height:1.6;color:var(--text)}
+.review-meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0}
+.pill{
+  padding:.25rem .75rem;border-radius:20px;
+  font-size:.72rem;font-weight:700;white-space:nowrap;
+  border:1px solid transparent;
+}
+.pill-pos{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.pill-neg{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.pill-neu{background:#fef3c7;color:#92400e;border-color:#fde68a}
+.conf{font-size:.7rem;color:var(--muted)}
+ 
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-icon{font-size:2.5rem;margin-bottom:1rem;opacity:.4}
+.empty-title{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.4rem;color:var(--blue-800)}
+.empty-sub{font-size:.88rem;line-height:1.6}
+ 
+/* ── Loading dots ── */
+.dots{display:inline-flex;gap:3px;margin-left:5px}
+.dots span{width:4px;height:4px;border-radius:50%;background:currentColor;animation:dotb .8s infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes dotb{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+ 
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--blue-50)}
+::-webkit-scrollbar-thumb{background:var(--blue-300);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--blue-400)}
+ 
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="logo">SENTI<span style="opacity:.4">AI</span></div>
+  <div class="topbar-right">
+    <button class="topbar-btn report-btn" id="report-btn" onclick="downloadReport()">⬇ PDF Report</button>
+    <div class="user-chip">
+      <div class="avatar" id="avatar-initial">?</div>
+      <span class="user-name" id="user-name">Loading…</span>
+    </div>
+    <a href="/logout"><button class="topbar-btn">Log out</button></a>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+
+    <!-- Metrics -->
+    <div>
+      <div class="section-label">Summary</div>
+      <div class="metrics">
+        <div class="metric pos"><span class="metric-val" id="cnt-pos">0</span><span class="metric-lbl">Positive 😊</span><span class="metric-pct" id="pct-pos">—</span></div>
+        <div class="metric neg"><span class="metric-val" id="cnt-neg">0</span><span class="metric-lbl">Negative 😠</span><span class="metric-pct" id="pct-neg">—</span></div>
+        <div class="metric neu"><span class="metric-val" id="cnt-neu">0</span><span class="metric-lbl">Neutral 😐</span><span class="metric-pct" id="pct-neu">—</span></div>
+        <div class="metric tot"><span class="metric-val" id="cnt-tot">0</span><span class="metric-lbl">Total</span><span class="metric-pct">&nbsp;</span></div>
+      </div>
+    </div>
+
+    <!-- Single analysis -->
+    <div>
+      <div class="section-label">Analyse a review</div>
+      <textarea class="textarea" id="single-input" placeholder="Paste a customer review here…" rows="4"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-grad" onclick="analyseSingle()">▶ Analyse</button>
+        <button class="btn" onclick="clearSingle()">Clear</button>
+      </div>
+      <div class="result-area" id="single-result"></div>
+    </div>
+
+    <!-- Bulk -->
+    <div>
+      <div class="section-label">Bulk analysis</div>
+      <div class="tabs">
+        <button class="tab active" id="tab-paste" onclick="switchTab('paste')">Paste</button>
+        <button class="tab" id="tab-upload" onclick="switchTab('upload')">CSV upload</button>
+      </div>
+
+      <div id="pane-paste">
+        <textarea class="textarea" id="bulk-input" placeholder="One review per line…" rows="5"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-grad" onclick="analyseBulk()">▶ Run bulk</button>
+          <button class="btn" onclick="loadSample()">Load sample</button>
+        </div>
+      </div>
+      <div id="pane-upload" style="display:none">
+        <div class="upload-zone" onclick="document.getElementById('csv-file').click()"
+             ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+          <div class="upload-icon">📂</div>
+          <p>Click or drag a CSV file here</p>
+          <p class="upload-hint">One column of text reviews</p>
+        </div>
+        <input type="file" id="csv-file" accept=".csv,.txt" style="display:none" onchange="handleCSV(this)"/>
+      </div>
+      <div id="status-msg" class="status" style="display:none"></div>
+    </div>
+
+    <!-- Insight -->
+    <div class="insight-box" id="insight-box"></div>
+
+  </aside>
+
+  <!-- ── Content ── -->
+  <main class="content">
+
+    <!-- Charts -->
+    <div class="viz-section" id="viz-section" style="display:none">
+      <div class="viz-header">
+        <span class="viz-title">Visualisations</span>
+        <div class="viz-tabs">
+          <button class="tab active" id="vt-bar" onclick="switchViz('bar')">Bar</button>
+          <button class="tab" id="vt-pie" onclick="switchViz('pie')">Pie</button>
+          <button class="tab" id="vt-trend" onclick="switchViz('trend')">Trend</button>
+        </div>
+      </div>
+
+      <div id="viz-bar">
+        <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        <div class="legend">
+          <span><span class="sq" style="background:#00e87a"></span>Positive</span>
+          <span><span class="sq" style="background:#ff5f4a"></span>Negative</span>
+          <span><span class="sq" style="background:#f59e0b"></span>Neutral</span>
+        </div>
+      </div>
+      <div id="viz-pie" style="display:none">
+        <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+        <div class="legend">
+          <span><span class="sq" style="background:#00e87a"></span>Positive</span>
+          <span><span class="sq" style="background:#ff5f4a"></span>Negative</span>
+          <span><span class="sq" style="background:#f59e0b"></span>Neutral</span>
+        </div>
+      </div>
+      <div id="viz-trend" style="display:none">
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Reviews list -->
+    <div class="list-section">
+      <div class="list-header">
+        <div class="list-title">Reviews <span class="muted" id="list-count"></span></div>
+        <div class="filter-btns">
+          <button class="filter-btn active" id="f-all" onclick="filterList('all')">All</button>
+          <button class="filter-btn" id="f-Positive" onclick="filterList('Positive')">Positive</button>
+          <button class="filter-btn" id="f-Negative" onclick="filterList('Negative')">Negative</button>
+          <button class="filter-btn" id="f-Neutral" onclick="filterList('Neutral')">Neutral</button>
+          <button class="filter-btn danger" onclick="clearAll()">Clear all</button>
+        </div>
+      </div>
+      <div id="reviews-list">
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">No reviews yet</div>
+          <div class="empty-sub">Paste a review in the sidebar or load sample data to get started.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── User info ─────────────────────────────────────────────────────────────────
+const USER = {{ user | tojson }};
+document.getElementById('user-name').textContent = USER.name;
+document.getElementById('avatar-initial').textContent = USER.name.charAt(0).toUpperCase();
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let allReviews = [], currentFilter = 'all', batchNum = 0;
+let barChart = null, pieChart = null, trendChart = null;
+let trendData = { labels:[], pos:[], neg:[], neu:[] };
+
+const SAMPLES = [
+  "The delivery was super fast and the product quality exceeded my expectations!",
+  "Absolutely terrible customer service. Waited 3 weeks and still no response.",
+  "The item arrived on time. Nothing special but does what it says.",
+  "I love this product! Best purchase I've made this year.",
+  "Very disappointed. The product broke after two days of use.",
+  "Shipping was okay. Not amazing, not bad — pretty average experience.",
+  "Fantastic! The support team resolved my issue within minutes.",
+  "The packaging was damaged and half the contents were missing.",
+  "Average experience. Would consider buying again if there was a discount.",
+  "Outstanding quality and very reasonable price. Highly recommended!",
+  "Worst online shopping experience I've ever had. Will never buy here again.",
+  "Product is fine. Took a bit longer to arrive than expected."
+];
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(t) {
+  ['paste','upload'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', id===t);
+    document.getElementById('pane-'+id).style.display = id===t ? 'block' : 'none';
+  });
+}
+function switchViz(v) {
+  ['bar','pie','trend'].forEach(id => {
+    document.getElementById('vt-'+id).classList.toggle('active', id===v);
+    document.getElementById('viz-'+id).style.display = id===v ? 'block' : 'none';
+  });
+}
+
+// ── Single review ─────────────────────────────────────────────────────────────
+function clearSingle() {
+  document.getElementById('single-input').value = '';
+  document.getElementById('single-result').innerHTML = '';
+}
+
+async function analyseSingle() {
+  const text = document.getElementById('single-input').value.trim();
+  if (!text) return;
+  const el = document.getElementById('single-result');
+  el.innerHTML = `<span style="font-size:.82rem;color:var(--muted2)">Analysing<span class="dots"><span></span><span></span><span></span></span></span>`;
+  try {
+    const data = await postJSON('/api/analyse', { reviews: [text] });
+    const r = data.results[0];
+    const cls = sentClass(r.sentiment);
+    const emoji = sentEmoji(r.sentiment);
+    el.innerHTML = `<div class="badge badge-${cls}">${emoji} ${r.sentiment}</div>
+      <div class="badge-conf">Confidence: ${r.confidence}% &nbsp;·&nbsp; Model: ${r.model}</div>`;
+    addReviews([r]);
+  } catch(e) { el.innerHTML = `<span style="color:var(--neg);font-size:.82rem">Error — ${e.message}</span>`; }
+}
+
+// ── Bulk ──────────────────────────────────────────────────────────────────────
+function loadSample() {
+  document.getElementById('bulk-input').value = SAMPLES.join('\n');
+  switchTab('paste');
+}
+
+async function analyseBulk() {
+  const lines = document.getElementById('bulk-input').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  if (!lines.length) return;
+  setStatus(`Analysing ${lines.length} review(s)<span class="dots"><span></span><span></span><span></span></span>`);
+  try {
+    const data = await postJSON('/api/analyse', { reviews: lines });
+    addReviews(data.results);
+    buildInsight(data.summary);
+    setStatus('');
+  } catch(e) { setStatus('Error: ' + e.message); }
+}
+
+// ── CSV upload ────────────────────────────────────────────────────────────────
+function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); }
+function handleCSV(input) { if(input.files[0]) uploadFile(input.files[0]); }
+
+async function uploadFile(file) {
+  setStatus(`Uploading "${file.name}"<span class="dots"><span></span><span></span><span></span></span>`);
+  const form = new FormData(); form.append('file', file);
+  try {
+    const res = await fetch('/api/upload', { method:'POST', body: form });
+    if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+    const data = await res.json();
+    addReviews(data.results); buildInsight(data.summary);
+    setStatus(`✅ Loaded ${data.results.length} reviews from "${file.name}"`);
+  } catch(e) { setStatus('Error: ' + e.message); }
+}
+
+// ── State management ──────────────────────────────────────────────────────────
+function addReviews(results) {
+  allReviews.push(...results);
+  batchNum++;
+  trendData.labels.push(`#${batchNum}`);
+  trendData.pos.push(allReviews.filter(r=>r.sentiment==='Positive').length);
+  trendData.neg.push(allReviews.filter(r=>r.sentiment==='Negative').length);
+  trendData.neu.push(allReviews.filter(r=>r.sentiment==='Neutral').length);
+  updateMetrics(); renderList(); updateCharts();
+  document.getElementById('viz-section').style.display = 'block';
+  document.getElementById('report-btn').style.display = 'inline-flex';
+}
+
+function clearAll() {
+  allReviews = []; trendData = {labels:[],pos:[],neg:[],neu:[]}; batchNum = 0;
+  updateMetrics(); renderList();
+  if(barChart){barChart.destroy();barChart=null;}
+  if(pieChart){pieChart.destroy();pieChart=null;}
+  if(trendChart){trendChart.destroy();trendChart=null;}
+  document.getElementById('viz-section').style.display = 'none';
+  document.getElementById('report-btn').style.display = 'none';
+  document.getElementById('insight-box').style.display = 'none';
+}
+
+// ── Metrics ───────────────────────────────────────────────────────────────────
+function updateMetrics() {
+  const pos=allReviews.filter(r=>r.sentiment==='Positive').length;
+  const neg=allReviews.filter(r=>r.sentiment==='Negative').length;
+  const neu=allReviews.filter(r=>r.sentiment==='Neutral').length;
+  const tot=allReviews.length||1;
+  document.getElementById('cnt-pos').textContent=pos;
+  document.getElementById('cnt-neg').textContent=neg;
+  document.getElementById('cnt-neu').textContent=neu;
+  document.getElementById('cnt-tot').textContent=allReviews.length;
+  document.getElementById('pct-pos').textContent=pos?Math.round(pos/tot*100)+'%':'—';
+  document.getElementById('pct-neg').textContent=neg?Math.round(neg/tot*100)+'%':'—';
+  document.getElementById('pct-neu').textContent=neu?Math.round(neu/tot*100)+'%':'—';
+}
+
+// ── Reviews list ──────────────────────────────────────────────────────────────
+function filterList(f) {
+  currentFilter=f;
+  ['all','Positive','Negative','Neutral'].forEach(id=>{
+    const el=document.getElementById('f-'+id); if(el) el.classList.toggle('active',id===f);
+  });
+  renderList();
+}
+
+function renderList() {
+  const filtered = currentFilter==='all' ? allReviews : allReviews.filter(r=>r.sentiment===currentFilter);
+  const cnt = document.getElementById('list-count');
+  cnt.textContent = filtered.length ? `(${filtered.length})` : '';
+  const el = document.getElementById('reviews-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${allReviews.length?'🔍':'💬'}</div>
+      <div class="empty-title">${allReviews.length?'No '+currentFilter.toLowerCase()+' reviews':'No reviews yet'}</div>
+      <div class="empty-sub">${allReviews.length?'Try a different filter.':'Paste a review in the sidebar or load sample data.'}</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(r => {
+    const cls=sentClass(r.sentiment), emoji=sentEmoji(r.sentiment);
+    return `<div class="review-item">
+      <span class="review-text">${esc(r.text)}</span>
+      <div class="review-meta">
+        <span class="pill pill-${cls}">${emoji} ${r.sentiment}</span>
+        <span class="conf">${r.confidence}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ display:false } },
+  animation:{ duration:400 }
+};
+
+function updateCharts() {
+  const pos=allReviews.filter(r=>r.sentiment==='Positive').length;
+  const neg=allReviews.filter(r=>r.sentiment==='Negative').length;
+  const neu=allReviews.filter(r=>r.sentiment==='Neutral').length;
+  const tot=pos+neg+neu||1;
+
+  if(barChart){barChart.data.datasets[0].data=[pos,neg,neu];barChart.update();}
+  else barChart = new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{ labels:['Positive','Negative','Neutral'], datasets:[{
+      data:[pos,neg,neu], backgroundColor:['#00e87a','#ff5f4a','#f59e0b'],
+      borderRadius:8, borderSkipped:false
+    }]},
+    options:{...CHART_DEFAULTS, scales:{
+      y:{beginAtZero:true,ticks:{stepSize:1,color:'#6060aa'},grid:{color:'rgba(255,255,255,.05)'}},
+      x:{ticks:{color:'#6060aa'},grid:{display:false}}
+    }, plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} reviews (${Math.round(c.raw/tot*100)}%)`}}}}
+  });
+
+  if(pieChart){pieChart.data.datasets[0].data=[pos,neg,neu];pieChart.update();}
+  else pieChart = new Chart(document.getElementById('pieChart'),{
+    type:'doughnut',
+    data:{ labels:['Positive','Negative','Neutral'], datasets:[{
+      data:[pos,neg,neu], backgroundColor:['#00e87a','#ff5f4a','#f59e0b'],
+      borderWidth:2, borderColor:'#080810', hoverOffset:8
+    }]},
+    options:{...CHART_DEFAULTS, cutout:'62%', plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${Math.round(c.raw/tot*100)}%`}}}}
+  });
+
+  if(trendChart){
+    trendChart.data.labels=trendData.labels;
+    trendChart.data.datasets[0].data=trendData.pos;
+    trendChart.data.datasets[1].data=trendData.neg;
+    trendChart.data.datasets[2].data=trendData.neu;
+    trendChart.update();
+  } else trendChart = new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{ labels:trendData.labels, datasets:[
+      {label:'Positive',data:trendData.pos,borderColor:'#00e87a',backgroundColor:'rgba(0,232,122,.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#00e87a'},
+      {label:'Negative',data:trendData.neg,borderColor:'#ff5f4a',backgroundColor:'rgba(255,95,74,.08)',tension:.4,fill:true,pointRadius:5,borderDash:[5,3],pointBackgroundColor:'#ff5f4a'},
+      {label:'Neutral', data:trendData.neu,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.06)',tension:.4,fill:true,pointRadius:5,borderDash:[2,4],pointBackgroundColor:'#f59e0b'},
+    ]},
+    options:{...CHART_DEFAULTS,
+      plugins:{legend:{display:true,position:'top',labels:{color:'#9090b8',font:{size:11},boxWidth:10}}},
+      scales:{
+        y:{beginAtZero:true,ticks:{stepSize:1,color:'#6060aa'},grid:{color:'rgba(255,255,255,.05)'}},
+        x:{ticks:{color:'#6060aa'},grid:{display:false}}
+      }
+    }
+  });
+}
+
+// ── Insight ───────────────────────────────────────────────────────────────────
+function buildInsight(summary) {
+  const p=summary.percentages, c=summary.counts, total=summary.total;
+  const tone = p.Positive>60 ? 'Overall sentiment is <strong>positive</strong> 😊 — customers are satisfied.'
+    : p.Negative>40 ? 'Overall sentiment is <strong>concerning</strong> 😠 — high negative volume detected.'
+    : 'Sentiment is <strong>mixed</strong> 😐 — no single emotion dominates.';
+  const tip = c.Negative>0
+    ? '💡 Review negative feedback to identify pain points and improve customer experience.'
+    : '✅ Keep up the great work — customers are overwhelmingly satisfied!';
+  const el = document.getElementById('insight-box');
+  el.style.display = 'block';
+  el.innerHTML = `<strong>Key insight:</strong> ${tone}<br><span style="color:var(--muted2)">
+    ${total} reviews: ${p.Positive}% positive, ${p.Negative}% negative, ${p.Neutral}% neutral.</span><br>${tip}`;
+}
+
+// ── PDF Report ────────────────────────────────────────────────────────────────
+async function downloadReport() {
+  if (!allReviews.length) return;
+  const btn = document.getElementById('report-btn');
+  btn.disabled=true; btn.textContent='⏳ Generating…';
+  const total=allReviews.length, counts={Positive:0,Negative:0,Neutral:0};
+  allReviews.forEach(r=>{if(counts[r.sentiment]!==undefined)counts[r.sentiment]++;});
+  const percentages={}; Object.keys(counts).forEach(k=>percentages[k]=+(counts[k]/total*100).toFixed(1));
+  const summary={total,counts,percentages,dominant:Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b)};
+  try {
+    const res = await fetch('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({results:allReviews,summary})});
+    if(!res.ok) throw new Error('Failed');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`sentiment_report_${new Date().toISOString().slice(0,10)}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Error generating report: '+e.message); }
+  btn.disabled=false; btn.textContent='⬇ PDF Report';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function sentClass(s){return s==='Positive'?'pos':s==='Negative'?'neg':'neu'}
+function sentEmoji(s){return s==='Positive'?'😊':s==='Negative'?'😠':'😐'}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function setStatus(html){const el=document.getElementById('status-msg');el.style.display=html?'block':'none';el.innerHTML=html}
+async function postJSON(url,body){
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||`HTTP ${res.status}`)}
+  return res.json()
+}
+
+// Enter key in single input
+document.getElementById('single-input').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')analyseSingle()})
+</script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SentiAI — Customer Sentiment Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue-900:#0a1628;
+  --blue-800:#0f2044;
+  --blue-700:#1a3a6e;
+  --blue-600:#1d4ed8;
+  --blue-500:#2563eb;
+  --blue-400:#3b82f6;
+  --blue-300:#93c5fd;
+  --blue-200:#bfdbfe;
+  --blue-100:#dbeafe;
+  --blue-50: #eff6ff;
+  --dark:#f0f4ff;
+  --surface:#e8effd;
+  --card:#ffffff;
+  --border:#c7d9f8;
+  --text:#0a1628;
+  --muted:#4b6094;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+/* ── Subtle dot-grid background (replaces noise) ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(var(--blue-200) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;z-index:0;opacity:.35;
+}
+
+/* ── Animated mesh orbs (soft blue tones) ── */
+.mesh{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.18;animation:drift 20s infinite ease-in-out}
+.orb1{width:600px;height:600px;background:var(--blue-400);top:-200px;left:-100px;animation-delay:0s}
+.orb2{width:500px;height:500px;background:var(--blue-300);top:30%;right:-150px;animation-delay:-7s}
+.orb3{width:400px;height:400px;background:var(--blue-200);bottom:-100px;left:30%;animation-delay:-14s}
+@keyframes drift{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(40px,-30px) scale(1.05)}
+  66%{transform:translate(-20px,40px) scale(.95)}
+}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.2rem 3rem;display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(20px);
+  background:rgba(240,244,255,.85);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 20px rgba(37,99,235,.08);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-links a{color:var(--muted);font-size:.9rem;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--blue-600)}
+.btn-nav{
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+  color:#fff !important;padding:.5rem 1.4rem;border-radius:8px;
+  font-weight:600;font-size:.85rem !important;
+  transition:opacity .2s,box-shadow .2s !important;
+  box-shadow:0 2px 10px rgba(37,99,235,.3);
+}
+.btn-nav:hover{opacity:.9;box-shadow:0 4px 16px rgba(37,99,235,.4)}
+
+/* ── Hero ── */
+.hero{
+  position:relative;z-index:1;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8rem 2rem 4rem;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:var(--blue-100);border:1px solid var(--blue-300);
+  border-radius:100px;padding:.4rem 1.2rem;
+  font-size:.8rem;color:var(--blue-700);
+  margin-bottom:2rem;letter-spacing:.05em;
+  animation:fadeUp .8s ease both;
+}
+.hero-eyebrow::before{
+  content:'';width:6px;height:6px;background:var(--blue-500);
+  border-radius:50%;animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+
+h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3rem,8vw,6.5rem);
+  font-weight:800;line-height:.95;letter-spacing:-.04em;
+  margin-bottom:1.5rem;color:var(--blue-900);
+  animation:fadeUp .8s .1s ease both;
+}
+h1 .grad{
+  background:linear-gradient(135deg,var(--blue-600) 0%,var(--blue-400) 50%,#7c3aed 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{
+  font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);
+  max-width:560px;line-height:1.7;margin-bottom:3rem;
+  font-weight:300;animation:fadeUp .8s .2s ease both;
+}
+.hero-cta{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;animation:fadeUp .8s .3s ease both}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+  color:#fff;padding:.9rem 2.4rem;border-radius:10px;
+  font-weight:700;font-size:1rem;text-decoration:none;
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(37,99,235,.35);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(37,99,235,.5)}
+
+.btn-secondary{
+  background:#fff;color:var(--blue-700);
+  padding:.9rem 2.4rem;border-radius:10px;
+  font-weight:500;font-size:1rem;text-decoration:none;
+  border:1.5px solid var(--border);
+  display:inline-flex;align-items:center;gap:.5rem;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+  box-shadow:0 1px 4px rgba(37,99,235,.08);
+}
+.btn-secondary:hover{border-color:var(--blue-400);background:var(--blue-50);box-shadow:0 4px 12px rgba(37,99,235,.15)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Stats bar ── */
+.stats-bar{
+  position:relative;z-index:1;
+  display:flex;justify-content:center;gap:4rem;
+  padding:2rem;margin:0 auto;max-width:700px;
+  border-top:1px solid var(--border);
+  animation:fadeUp .8s .5s ease both;
+}
+.stat{text-align:center}
+.stat-num{
+  font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-400));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.stat-lbl{font-size:.8rem;color:var(--muted);margin-top:.2rem}
+
+/* ── Sections ── */
+.section{position:relative;z-index:1;padding:6rem 2rem;max-width:1100px;margin:0 auto}
+.section-label{font-size:.8rem;color:var(--blue-600);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem;font-weight:700}
+.section-title{
+  font-family:'Syne',sans-serif;font-size:clamp(2rem,4vw,3rem);
+  font-weight:800;letter-spacing:-.03em;margin-bottom:1rem;color:var(--blue-900);
+}
+.section-sub{color:var(--muted);font-size:1.05rem;max-width:480px;line-height:1.7}
+
+/* ── Feature cards ── */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:3.5rem}
+.feature-card{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:16px;padding:2rem;
+  position:relative;overflow:hidden;
+  transition:transform .3s,border-color .3s,box-shadow .3s;
+  cursor:default;box-shadow:0 1px 4px rgba(37,99,235,.07);
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.04),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--blue-400);box-shadow:0 8px 24px rgba(37,99,235,.14)}
+.feature-card:hover::before{opacity:1}
+.feature-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1.2rem}
+.ic-green{background:rgba(22,163,74,.1)}
+.ic-blue{background:var(--blue-100)}
+.ic-purple{background:rgba(124,58,237,.1)}
+.ic-amber{background:rgba(217,119,6,.1)}
+.feature-card h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:.6rem;color:var(--blue-900)}
+.feature-card p{color:var(--muted);font-size:.9rem;line-height:1.7}
+
+/* ── How it works ── */
+.steps{display:flex;flex-direction:column;gap:0;margin-top:3.5rem;position:relative}
+.steps::before{
+  content:'';position:absolute;left:23px;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--blue-500),var(--blue-300),transparent);
+}
+.step{display:flex;gap:1.5rem;padding:1.5rem 0;position:relative}
+.step-num{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-400));
+  color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;box-shadow:0 4px 14px rgba(37,99,235,.4);
+}
+.step-body h3{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.4rem;color:var(--blue-900)}
+.step-body p{color:var(--muted);font-size:.95rem;line-height:1.7}
+
+/* ── Use cases ── */
+.usecases{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.5rem}
+.usecase{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:12px;padding:1.5rem;
+  display:flex;align-items:flex-start;gap:1rem;
+  transition:border-color .3s,box-shadow .3s;
+  box-shadow:0 1px 3px rgba(37,99,235,.06);
+}
+.usecase:hover{border-color:var(--blue-400);box-shadow:0 4px 14px rgba(37,99,235,.12)}
+.usecase-icon{font-size:1.5rem}
+.usecase h4{font-family:'Syne',sans-serif;font-weight:600;font-size:.95rem;margin-bottom:.3rem;color:var(--blue-900)}
+.usecase p{color:var(--muted);font-size:.82rem;line-height:1.6}
+
+/* ── CTA section ── */
+.cta-section{position:relative;z-index:1;padding:6rem 2rem;text-align:center}
+.cta-box{
+  background:linear-gradient(135deg,var(--blue-50),#fff);
+  border:1.5px solid var(--blue-300);
+  border-radius:24px;padding:5rem 2rem;
+  max-width:700px;margin:0 auto;
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 40px rgba(37,99,235,.12);
+}
+.cta-box::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.04),transparent);
+}
+.cta-box h2{
+  font-family:'Syne',sans-serif;font-size:clamp(2rem,4vw,3rem);
+  font-weight:800;letter-spacing:-.03em;
+  margin-bottom:1rem;color:var(--blue-900);
+}
+.cta-box p{color:var(--muted);font-size:1.05rem;margin-bottom:2.5rem;line-height:1.7}
+
+/* ── Footer ── */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+  padding:2.5rem;text-align:center;color:var(--muted);font-size:.85rem;
+  background:linear-gradient(to bottom,transparent,var(--blue-50));
+}
+
+/* ── Scroll reveal ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* ── Hero demo card ── */
+.hero-demo{position:relative;z-index:1;margin:3rem auto 0;max-width:480px;animation:fadeUp .8s .4s ease both}
+.demo-card{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:16px;padding:1.5rem;text-align:left;
+  box-shadow:0 8px 32px rgba(37,99,235,.12);
+}
+.demo-header{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;font-size:.8rem;color:var(--muted)}
+.demo-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-500);animation:pulse 2s infinite}
+.demo-reviews{display:flex;flex-direction:column;gap:.6rem}
+.demo-review{
+  background:var(--blue-50);border:1px solid var(--border);
+  border-radius:8px;padding:.7rem 1rem;font-size:.82rem;
+  display:flex;justify-content:space-between;align-items:center;gap:.5rem;
+}
+.demo-review span{color:var(--muted);flex:1;line-height:1.4}
+.pill{padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;white-space:nowrap;border:1px solid transparent}
+.pill-pos{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.pill-neg{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.pill-neu{background:#fef3c7;color:#92400e;border-color:#fde68a}
+</style>
+</head>
+<body>
+
+<div class="mesh">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<!-- Nav -->
+<nav>
+<div class="logo">
+  <img src="sentiment_tool\static\image4.png" alt="logo" class="logo-img">
+  <span class="logo-text">Nzi Senti <span style="opacity:.5">AI</span></span>
+</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#usecases">Use cases</a>
+    <a href="/login">Log in</a>
+    <a href="/signup" class="btn-nav">Get started →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span></span> AI-Powered Sentiment Intelligence
+  </div>
+  <h1>Understand what<br>customers <span class="grad">really feel</span></h1>
+  <p class="hero-sub">
+    SentiAI classifies thousands of customer reviews, emails, and social posts
+    into Positive, Negative, or Neutral — instantly, with AI-grade accuracy.
+  </p>
+  <div class="hero-cta">
+    <a href="/signup" class="btn-primary">Start for free →</a>
+    <a href="#how" class="btn-secondary">See how it works</a>
+  </div>
+
+  <!-- Live demo card -->
+  <div class="hero-demo">
+    <div class="demo-card">
+      <div class="demo-header">
+        <div class="demo-dot"></div>
+        Live classification preview
+      </div>
+      <div class="demo-reviews">
+        <div class="demo-review"><span>"The delivery was super fast and quality exceeded expectations!"</span><div class="pill pill-pos">Positive</div></div>
+        <div class="demo-review"><span>"Terrible customer service. Waited 3 weeks with no response."</span><div class="pill pill-neg">Negative</div></div>
+        <div class="demo-review"><span>"The item arrived on time. Nothing special but does the job."</span><div class="pill pill-neu">Neutral</div></div>
+        <div class="demo-review"><span>"Best purchase I've made this year. Absolutely love it!"</span><div class="pill pill-pos">Positive</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar reveal">
+  <div class="stat"><div class="stat-num">10K+</div><div class="stat-lbl">Reviews analysed</div></div>
+  <div class="stat"><div class="stat-num">98%</div><div class="stat-lbl">Accuracy</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-lbl">Sentiment classes</div></div>
+  <div class="stat"><div class="stat-num">&lt;1s</div><div class="stat-lbl">Per review</div></div>
+</div>
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="reveal">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need<br>to understand your customers</h2>
+    <p class="section-sub">From single review analysis to bulk CSV processing — all in one place.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-green">🧠</div>
+      <h3>VADER NLP Engine</h3>
+      <p>Industry-leading rule-based sentiment analysis that works out of the box — no training data required.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-blue">📊</div>
+      <h3>Interactive Charts</h3>
+      <p>Bar charts, doughnut charts, and trend lines that update in real time as you analyse more reviews.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-purple">📄</div>
+      <h3>PDF Reports</h3>
+      <p>Generate professional, branded PDF reports with charts, metrics, and AI-generated insights in one click.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-amber">📁</div>
+      <h3>CSV Bulk Upload</h3>
+      <p>Drag and drop a CSV file with thousands of reviews. Get results in seconds — no manual entry needed.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-green">🤖</div>
+      <h3>Custom ML Model</h3>
+      <p>Train your own Logistic Regression model on your labelled data for even higher domain-specific accuracy.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon ic-blue">⚡</div>
+      <h3>REST API</h3>
+      <p>Integrate sentiment analysis into your own apps via a simple JSON API endpoint — ready for production.</p>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section" id="how">
+  <div class="reveal">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">From raw text to<br>actionable insights</h2>
+  </div>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Collect feedback</h3>
+        <p>Paste reviews directly, upload a CSV, or call the API from your own system. SentiAI accepts any customer text.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Clean &amp; process</h3>
+        <p>The NLP pipeline strips URLs, HTML, punctuation and stopwords — preparing text for accurate classification.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Classify sentiment</h3>
+        <p>VADER or your custom ML model scores each review, returning Positive, Negative, or Neutral with a confidence percentage.</p>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Visualise &amp; act</h3>
+        <p>View interactive charts, filter by sentiment, read the AI-generated insight, and download a PDF report for stakeholders.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Use cases -->
+<section class="section" id="usecases">
+  <div class="reveal">
+    <div class="section-label">Use cases</div>
+    <h2 class="section-title">Built for every industry</h2>
+  </div>
+  <div class="usecases">
+    <div class="usecase reveal"><div class="usecase-icon">🛒</div><div><h4>Retail &amp; E-commerce</h4><p>Analyse product reviews from Takealot, Amazon or your own store.</p></div></div>
+    <div class="usecase reveal"><div class="usecase-icon">🏦</div><div><h4>Banking</h4><p>Monitor customer complaints to improve service quality.</p></div></div>
+    <div class="usecase reveal"><div class="usecase-icon">📱</div><div><h4>Telecom</h4><p>Track brand sentiment on social media for MTN, Vodacom, and more.</p></div></div>
+    <div class="usecase reveal"><div class="usecase-icon">🏥</div><div><h4>Healthcare</h4><p>Process patient feedback to improve care and service delivery.</p></div></div>
+    <div class="usecase reveal"><div class="usecase-icon">🎓</div><div><h4>Education</h4><p>Understand student satisfaction and improve academic programs.</p></div></div>
+    <div class="usecase reveal"><div class="usecase-icon">🏨</div><div><h4>Hospitality</h4><p>Monitor hotel and restaurant reviews across multiple platforms.</p></div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-box reveal">
+    <h2>Ready to understand<br>your customers?</h2>
+    <p>Join SentiAI and start classifying customer sentiment in under 2 minutes. No credit card required.</p>
+    <a href="/signup" class="btn-primary" style="display:inline-flex;margin:0 auto">Create free account →</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p class="logo" style="margin-bottom:.5rem">SENTI<span style="opacity:.4">AI</span></p>
+  <p>© 2025 SentiAI · Customer Sentiment Intelligence Platform · Built with Python &amp; Flask</p>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible') })
+}, { threshold: 0.12 })
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+// Stagger feature cards
+document.querySelectorAll('.feature-card, .usecase').forEach((el,i) => {
+  el.style.transitionDelay = (i % 3) * 0.1 + 's'
+})
+</script>
+</body>
+</html>

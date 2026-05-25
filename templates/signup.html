@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sign up — SentiAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue-900:#0a1628;
+  --blue-800:#0f2044;
+  --blue-700:#1a3a6e;
+  --blue-600:#1d4ed8;
+  --blue-500:#2563eb;
+  --blue-400:#3b82f6;
+  --blue-300:#93c5fd;
+  --blue-100:#dbeafe;
+  --blue-50: #eff6ff;
+  --dark:#f0f4ff;
+  --card:#ffffff;
+  --border:#c7d9f8;
+  --text:#0a1628;
+  --muted:#4b6094;
+  --error:#dc2626;
+  --success:#16a34a;
+}
+ 
+body{
+  background:var(--dark);color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;
+}
+ 
+/* ── Background mesh ── */
+.mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.2;animation:drift 20s infinite ease-in-out}
+.orb1{width:500px;height:500px;background:var(--blue-300);top:-150px;right:-100px}
+.orb2{width:400px;height:400px;background:var(--blue-200, #bfdbfe);bottom:-100px;left:-100px;animation-delay:-10s}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,20px)}}
+ 
+/* ── Dot grid overlay ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(var(--blue-300) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;z-index:0;opacity:.25;
+}
+ 
+/* ── Container ── */
+.container{
+  position:relative;z-index:1;width:100%;max-width:460px;
+  animation:fadeUp .6s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+ 
+/* ── Logo ── */
+.logo-wrap{text-align:center;margin-bottom:2.5rem}
+.logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;
+  background:linear-gradient(135deg,var(--blue-700),var(--blue-400));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo-sub{color:var(--muted);font-size:.85rem;margin-top:.3rem}
+ 
+/* ── Card ── */
+.card{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:20px;padding:2.5rem;
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 24px rgba(37,99,235,.1);
+}
+.card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.03),transparent);
+  pointer-events:none;
+}
+ 
+/* ── Typography ── */
+h2{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:.4rem;color:var(--blue-900)}
+.card-sub{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+ 
+/* ── Fields ── */
+.field{margin-bottom:1.2rem;position:relative}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.03em;font-weight:500}
+ 
+input{
+  width:100%;
+  background:var(--blue-50);
+  border:1.5px solid var(--border);
+  border-radius:10px;padding:.85rem 1rem;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+  outline:none;
+}
+input:focus{
+  border-color:var(--blue-400);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+  background:#fff;
+}
+input::placeholder{color:var(--muted)}
+input.valid{border-color:rgba(22,163,74,.5);background:#f0fdf4}
+input.invalid{border-color:rgba(220,38,38,.4);background:#fff5f5}
+ 
+.field-hint{font-size:.78rem;color:var(--muted);margin-top:.4rem}
+.field-hint.error{color:var(--error)}
+ 
+/* ── Password strength bar ── */
+.strength-bar{
+  height:4px;border-radius:2px;
+  background:var(--border);margin-top:.5rem;overflow:hidden;
+}
+.strength-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0}
+ 
+/* ── Main button ── */
+.btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-500));
+  color:#fff;border:none;border-radius:10px;padding:1rem;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;
+  cursor:pointer;transition:opacity .2s,transform .2s,box-shadow .2s;
+  margin-top:.5rem;position:relative;overflow:hidden;
+  box-shadow:0 4px 16px rgba(37,99,235,.35);
+}
+.btn:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.45)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+ 
+/* ── Error message ── */
+.error-msg{
+  background:#fee2e2;border:1px solid #fecaca;
+  border-radius:8px;padding:.75rem 1rem;
+  color:var(--error);font-size:.85rem;margin-bottom:1rem;display:none;
+}
+.error-msg.show{display:block}
+ 
+/* ── Success overlay ── */
+.success-overlay{
+  position:absolute;inset:0;background:var(--card);
+  border-radius:20px;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:2.5rem;z-index:10;
+}
+.success-overlay.show{display:flex}
+.success-icon{
+  width:64px;height:64px;
+  background:linear-gradient(135deg,var(--blue-600),var(--blue-400));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;margin-bottom:1.5rem;
+  animation:popIn .4s ease;
+  box-shadow:0 4px 20px rgba(37,99,235,.4);
+}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+.success-overlay h3{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:.5rem;color:var(--blue-900)}
+.success-overlay p{color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.5rem}
+.success-overlay .redirect-note{font-size:.8rem;color:var(--blue-400);margin-top:.5rem}
+ 
+/* ── Perks list ── */
+.perks{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.8rem}
+.perk{display:flex;align-items:center;gap:.7rem;font-size:.85rem;color:var(--muted)}
+.perk-dot{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--blue-100);border:1px solid var(--blue-300);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:.65rem;color:var(--blue-600);font-weight:700;
+}
+ 
+/* ── Terms ── */
+.terms{font-size:.8rem;color:var(--muted);text-align:center;margin-top:1.2rem;line-height:1.6}
+.terms a{color:var(--blue-500);text-decoration:none;font-weight:500}
+.terms a:hover{text-decoration:underline}
+ 
+/* ── Divider ── */
+.divider{
+  display:flex;align-items:center;gap:1rem;
+  margin:1.5rem 0;color:var(--muted);font-size:.82rem;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+ 
+/* ── Footer link ── */
+.footer-link{text-align:center;font-size:.88rem;color:var(--muted)}
+.footer-link a{color:var(--blue-500);text-decoration:none;font-weight:500}
+.footer-link a:hover{text-decoration:underline}
+ 
+/* ── Back link ── */
+.back-link{text-align:center;margin-top:1.2rem}
+.back-link a{color:var(--muted);font-size:.85rem;text-decoration:none;transition:color .2s}
+.back-link a:hover{color:var(--blue-600)}
+ 
+/* ── Button spinner ── */
+.spinner{
+  display:none;width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;
+  position:absolute;right:1.2rem;top:50%;transform:translateY(-50%);
+}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-text{opacity:0}
+</style>
+</head>
+<body>
+<div class="mesh"><div class="orb orb1"></div><div class="orb orb2"></div></div>
+
+<div class="container">
+  <div class="logo-wrap">
+    <a href="/" style="text-decoration:none"><div class="logo">SENTI<span style="opacity:.5">AI</span></div></a>
+    <div class="logo-sub">Customer Sentiment Intelligence</div>
+  </div>
+
+  <div class="card">
+    <!-- Success overlay -->
+    <div class="success-overlay" id="success-overlay">
+      <div class="success-icon">✓</div>
+      <h3>Account created!</h3>
+      <p>Welcome to SentiAI. We've sent your login details to your email address. Redirecting you to the dashboard…</p>
+      <div class="redirect-note" id="countdown-text">Redirecting in 3s…</div>
+    </div>
+
+    <h2>Create your account</h2>
+    <p class="card-sub">Start analysing customer sentiment in minutes</p>
+
+    <div class="perks">
+      <div class="perk"><div class="perk-dot">✓</div>Free to use — no credit card required</div>
+      <div class="perk"><div class="perk-dot">✓</div>Login details sent to your email</div>
+      <div class="perk"><div class="perk-dot">✓</div>Instant access to the full dashboard</div>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="field">
+      <label>Full name</label>
+      <input type="text" id="name" placeholder="Jane Smith" autocomplete="name" oninput="validateName()"/>
+    </div>
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" oninput="validateEmail()"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="At least 6 characters" autocomplete="new-password" oninput="checkStrength()"/>
+      <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+      <div class="field-hint" id="strength-label">Choose a strong password</div>
+    </div>
+
+    <button class="btn" id="signup-btn" onclick="doSignup()">
+      <span class="btn-text">Create account</span>
+      <div class="spinner"></div>
+    </button>
+
+    <div class="terms">By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></div>
+
+    <div class="divider">or</div>
+    <div class="footer-link">Already have an account? <a href="/login">Log in →</a></div>
+  </div>
+
+  <div class="back-link"><a href="/">← Back to home</a></div>
+</div>
+
+<script>
+function validateName() {
+  const el = document.getElementById('name')
+  el.classList.toggle('valid', el.value.trim().length >= 2)
+}
+
+function validateEmail() {
+  const el = document.getElementById('email')
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value)
+  el.classList.toggle('valid', ok)
+  el.classList.toggle('invalid', el.value.length > 0 && !ok)
+}
+
+function checkStrength() {
+  const val  = document.getElementById('password').value
+  const fill = document.getElementById('strength-fill')
+  const lbl  = document.getElementById('strength-label')
+  let score  = 0
+  if (val.length >= 6)  score++
+  if (val.length >= 10) score++
+  if (/[A-Z]/.test(val)) score++
+  if (/[0-9]/.test(val)) score++
+  if (/[^A-Za-z0-9]/.test(val)) score++
+  const levels = [
+    { w:'0%',  bg:'transparent',     txt:'Choose a strong password' },
+    { w:'25%', bg:'#ff5a5a',         txt:'Weak' },
+    { w:'50%', bg:'#fbbf24',         txt:'Fair' },
+    { w:'75%', bg:'#00ccff',         txt:'Good' },
+    { w:'100%',bg:'var(--g1)',       txt:'Strong ✓' },
+  ]
+  const lvl = levels[Math.min(score, 4)]
+  fill.style.width = lvl.w; fill.style.background = lvl.bg; lbl.textContent = lvl.txt
+}
+
+async function doSignup() {
+  const name     = document.getElementById('name').value.trim()
+  const email    = document.getElementById('email').value.trim()
+  const password = document.getElementById('password').value
+  const btn      = document.getElementById('signup-btn')
+  const errEl    = document.getElementById('error-msg')
+
+  errEl.classList.remove('show')
+  if (!name || !email || !password) { showError('Please fill in all fields.'); return }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return }
+  if (password.length < 6) { showError('Password must be at least 6 characters.'); return }
+
+  btn.disabled = true; btn.classList.add('loading')
+
+  try {
+    const res  = await fetch('/api/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, password }) })
+    const data = await res.json()
+    if (data.success) {
+      showSuccess(data.redirect)
+    } else {
+      showError(data.error || 'Signup failed.')
+    }
+  } catch(e) { showError('Network error. Please try again.') }
+
+  btn.disabled = false; btn.classList.remove('loading')
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg')
+  el.textContent = msg; el.classList.add('show')
+}
+
+function showSuccess(redirect) {
+  document.getElementById('success-overlay').classList.add('show')
+  let n = 3
+  const el = document.getElementById('countdown-text')
+  const iv = setInterval(() => {
+    n--; el.textContent = `Redirecting in ${n}s…`
+    if (n <= 0) { clearInterval(iv); window.location.href = redirect }
+  }, 1000)
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doSignup() })
+</script>
+</body>
+</html>
